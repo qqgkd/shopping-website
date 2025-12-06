@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>我的订单</title>
+  <th:block th:replace="fragments/layout :: headlinks"></th:block>
+</head>
+<body>
+  <th:block th:replace="fragments/layout :: header"></th:block>
+  <main class="container py-4">
+    <div id="wsNotice" class="alert alert-info d-none">订单已支付</div>
+    <div class="card">
+      <div class="card-header">我的订单</div>
+      <div class="card-body">
+        <table class="table table-striped">
+          <thead><tr><th>订单ID</th><th>状态</th><th>总价</th><th>详情</th></tr></thead>
+          <tbody>
+            <tr th:each="o : ${orders}">
+              <td th:text="${o.id}"></td>
+              <td th:text="${o.status}"></td>
+              <td th:text="${o.total}"></td>
+              <td><a class="btn btn-sm btn-outline-primary" th:href="@{'/order/' + ${o.id}}">查看</a></td>
+            </tr>
+          </tbody>
+        </table>
+        <a class="btn btn-outline-secondary" href="/shop">返回购物</a>
+      </div>
+    </div>
+  </main>
+  <th:block th:replace="fragments/layout :: footer"></th:block>
+  <script>
+    const wsProto = location.protocol === 'https:' ? 'wss' : 'ws';
+    const ws = new WebSocket(wsProto + '://' + location.host + '/ws/orders');
+    ws.onmessage = (e) => {
+      const msg = String(e.data || '');
+      if (msg.startsWith('ORDER_PAID:')) {
+        const notice = document.getElementById('wsNotice');
+        if (notice) { notice.textContent = '收到支付通知：' + msg.split(':')[1]; notice.classList.remove('d-none'); }
+        setTimeout(() => location.reload(), 1000);
+      }
+    };
+  </script>
+</body>
+</html>
